@@ -1,20 +1,27 @@
 # -*- coding: utf-8 -*-
 
 import logging
+import os
+
 from fhirclient import client
 from fhirclient.models.medication import Medication
 from fhirclient.models.medicationrequest import MedicationRequest
 
 from flask import Flask, request, redirect, session
 
-# app setup
-smart_defaults = {
-    'app_id': 'my_web_app',
-    'api_base': 'https://sb-fhir-stu3.smarthealthit.org/smartstu3/data',
-    'redirect_uri': 'http://localhost:8000/fhir-app/',
-}
 
 app = Flask(__name__)
+app.config.from_object('default_settings')
+if os.environ.get('APP_SETTINGS'):
+    app.config.from_envvar('APP_SETTINGS')
+
+# app setup
+smart_defaults = {
+    'app_id': app.config['EPIC_APP_ID'],
+    'api_base': app.config['API_BASE'],
+    'redirect_uri': app.config['REDIRECT_URI'],
+    'patient_id': app.config['PATIENT_ID'],
+}
 
 def _save_state(state):
     session['state'] = state
@@ -43,7 +50,7 @@ def _get_prescriptions(smart):
     return None
 
 def _get_medication_by_ref(ref, smart):
-    med_id = ref.split("/")[1]
+    med_id = ref.split("/")[-1]
     return Medication.read(med_id, smart.server).code
 
 def _med_name(med):
@@ -85,7 +92,7 @@ def index():
             body += "<p>{0} prescriptions: <ul><li>{1}</li></ul></p>".format("His" if 'male' == smart.patient.gender else "Her", '</li><li>'.join([_get_med_name(p,smart) for p in pres]))
         else:
             body += "<p>(There are no prescriptions for {0})</p>".format("him" if 'male' == smart.patient.gender else "her")
-        body += """<p><a href="/logout">Change patient</a></p>"""
+        body += """<p><a href="/reset">Start over</a></p>"""
     else:
         auth_url = smart.authorize_url
         if auth_url is not None:
