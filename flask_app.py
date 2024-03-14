@@ -92,7 +92,7 @@ def index():
             body += "<p>{0} prescriptions: <ul><li>{1}</li></ul></p>".format("His" if 'male' == smart.patient.gender else "Her", '</li><li>'.join([_get_med_name(p,smart) for p in pres]))
         else:
             body += "<p>(There are no prescriptions for {0})</p>".format("him" if 'male' == smart.patient.gender else "her")
-        body += """<p><a href="/logout">Change patient</a></p>"""
+        body += """<p><a href="/reset">Start over</a></p>"""
     else:
         auth_url = smart.authorize_url
         if auth_url is not None:
